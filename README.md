@@ -1,42 +1,41 @@
+# Telegram Bot with AI Support Assistant
 
-# Telegram-бот с AI-ассистентом поддержки
-
-> Telegram-бот первой линии поддержки с интеграцией OpenAI API, опциональным RAG (Retrieval-Augmented Generation) и аналитикой диалогов. Создан с помощью AI-ассистента для проектирования архитектуры диалогов и системного промпта.
-
----
-
-## Что делает
-
-Бот принимает сообщения от пользователей в Telegram, обрабатывает их через LLM (OpenAI GPT) и отвечает как ассистент первой линии поддержки. Поддерживает два режима работы: прямой вызов LLM и RAG с поиском по базе знаний.
-
-### Возможности
-
-| Функция | Описание |
-|---------|----------|
-| `/start` | Приветственное сообщение и инструкция |
-| Текстовые сообщения | Обработка запросов через OpenAI API |
-| RAG-режим | Поиск релевантных документов перед генерацией ответа |
-| SQLite-хранилище | Сохранение истории всех диалогов |
-| `/stats` | Статистика: количество диалогов, средняя оценка |
+> A first-line support Telegram bot with OpenAI API integration, optional RAG (Retrieval-Augmented Generation), and conversation analytics. Built with an AI assistant for dialog architecture and system prompt design.
 
 ---
 
-## Стек технологий
+## What It Does
 
-| Компонент | Технология |
+The bot receives messages from users in Telegram, processes them via LLM (OpenAI GPT), and responds as a first-line support assistant. It supports two operating modes: direct LLM call and RAG with knowledge base search.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| `/start` | Welcome message and instructions |
+| Text messages | Query processing via OpenAI API |
+| RAG mode | Search for relevant documents before generating a response |
+| SQLite storage | Saving history of all conversations |
+| `/stats` | Statistics: number of conversations, average rating |
+
+---
+
+## Tech Stack
+
+| Component | Technology |
 |-----------|------------|
-| Язык | Python 3.10+ |
+| Language | Python 3.10+ |
 | Telegram API | python-telegram-bot v20+ |
 | LLM | OpenAI GPT-4o-mini |
 | Embeddings (RAG) | sentence-transformers (all-MiniLM-L6-v2) |
-| База данных | SQLite |
-| Конфигурация | python-dotenv |
+| Database | SQLite |
+| Configuration | python-dotenv |
 
 ---
 
-## Установка
+## Installation
 
-### 1. Клонирование и зависимости
+### 1. Clone and Install Dependencies
 
 ```bash
 git clone https://github.com/Braunder/AITGSupport.git
@@ -44,206 +43,206 @@ cd AITGSupport
 pip install python-telegram-bot openai sentence-transformers python-dotenv numpy
 ```
 
-### 2. Настройка переменных окружения
+### 2. Configure Environment Variables
 
-Создайте файл `.env` в корне проекта:
+Create a `.env` file in the project root:
 
 ```env
 BOT_TOKEN=your_telegram_bot_token_from_BotFather
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4o-mini
-USE_RAG=0          # 1 для включения RAG-режима
+USE_RAG=0          # 1 to enable RAG mode
 ```
 
-### 3. Запуск
+### 3. Run
 
 ```bash
 python bot.py
 ```
 
-Бот начнёт polling и будет отвечать на сообщения в Telegram.
+The bot will start polling and respond to messages in Telegram.
 
 ---
 
-## Архитектура
+## Architecture
 
 ```
-Пользователь (Telegram)
+User (Telegram)
     ↓
 python-telegram-bot (Application)
     ↓
 handle_message()
-    ├── RAG-режим (USE_RAG=1)
-    │   ├── retrieve() — поиск по embeddings
-    │   └── generate_answer() — LLM + контекст
-    └── Прямой режим (USE_RAG=0)
+    ├── RAG mode (USE_RAG=1)
+    │   ├── retrieve() — embedding-based search
+    │   └── generate_answer() — LLM + context
+    └── Direct mode (USE_RAG=0)
         └── openai.ChatCompletion.create()
     ↓
 SQLite (bot_history.db)
     ↓
-Ответ пользователю
+Response to user
 ```
 
 ---
 
-## Структура проекта
+## Project Structure
 
 ```
 .
-├── bot.py              # Основной скрипт бота
-├── rag.py              # Модуль RAG (retrieval + generation)
-├── .env                # Переменные окружения (не коммитить!)
-├── bot_history.db      # SQLite БД (создаётся автоматически)
-└── README.md           # Этот файл
+├── bot.py              # Main bot script
+├── rag.py              # RAG module (retrieval + generation)
+├── .env                # Environment variables (do not commit!)
+├── bot_history.db      # SQLite DB (created automatically)
+└── README.md           # This file
 ```
 
 ---
 
-## Модули
+## Modules
 
 ### `bot.py`
 
-Основной скрипт. Инициализирует БД, настраивает handlers Telegram и запускает polling.
+Main script. Initializes the DB, sets up Telegram handlers, and starts polling.
 
-**Ключевые функции:**
+**Key Functions:**
 
-| Функция | Назначение |
-|---------|------------|
-| `init_db()` | Создание таблицы `conversations` в SQLite |
-| `start()` | Handler команды `/start` |
-| `handle_message()` | Основной handler текстовых сообщений |
-| `stats()` | Handler команды `/stats` — аналитика |
-| `main()` | Точка входа — сборка Application и запуск polling |
+| Function | Purpose |
+|----------|---------|
+| `init_db()` | Creates `conversations` table in SQLite |
+| `start()` | Handler for `/start` command |
+| `handle_message()` | Main handler for text messages |
+| `stats()` | Handler for `/stats` — analytics |
+| `main()` | Entry point — assembles Application and starts polling |
 
-**Схема таблицы `conversations`:**
+**`conversations` Table Schema:**
 
-| Поле | Тип | Описание |
-|------|-----|----------|
-| `id` | INTEGER PK | Автоинкремент |
-| `user_id` | INTEGER | ID пользователя Telegram |
-| `message` | TEXT | Вопрос пользователя |
-| `response` | TEXT | Ответ бота |
-| `timestamp` | DATETIME | Время диалога (DEFAULT CURRENT_TIMESTAMP) |
-| `satisfaction` | INTEGER | Оценка пользователя 1–5 (NULL по умолчанию) |
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | INTEGER PK | Auto-increment |
+| `user_id` | INTEGER | Telegram user ID |
+| `message` | TEXT | User's question |
+| `response` | TEXT | Bot's answer |
+| `timestamp` | DATETIME | Conversation time (DEFAULT CURRENT_TIMESTAMP) |
+| `satisfaction` | INTEGER | User rating 1–5 (NULL by default) |
 
 ### `rag.py`
 
-Модуль Retrieval-Augmented Generation. Добавляет контекст из базы знаний перед генерацией ответа.
+Retrieval-Augmented Generation module. Adds context from the knowledge base before generating a response.
 
-**Класс `RAG`:**
+**`RAG` Class:**
 
-| Метод | Описание |
-|-------|----------|
-| `__init__(embedding_model)` | Загрузка SentenceTransformer, проверка OPENAI_API_KEY |
-| `add_documents(docs)` | Индексация документов: вычисление embeddings |
-| `retrieve(query, top_k)` | Поиск top-k релевантных документов по cosine similarity |
-| `generate_answer(query, top_k, system_prompt)` | Retrieval + LLM-генерация с контекстом |
+| Method | Description |
+|--------|-------------|
+| `__init__(embedding_model)` | Loads SentenceTransformer, checks OPENAI_API_KEY |
+| `add_documents(docs)` | Indexes documents: computes embeddings |
+| `retrieve(query, top_k)` | Searches top-k relevant documents by cosine similarity |
+| `generate_answer(query, top_k, system_prompt)` | Retrieval + LLM generation with context |
 
-**Формат документов для `add_documents`:**
+**Document format for `add_documents`:**
 
 ```python
 docs = [
-    {"id": "doc1", "text": "Инструкция по сбросу пароля...", "meta": {"category": "auth"}},
-    {"id": "doc2", "text": "Что делать, если не работает VPN...", "meta": {"category": "network"}}
+    {"id": "doc1", "text": "Instructions for resetting password...", "meta": {"category": "auth"}},
+    {"id": "doc2", "text": "What to do if VPN is not working...", "meta": {"category": "network"}}
 ]
 ```
 
 ---
 
-## Режимы работы
+## Operating Modes
 
-### Режим 1: Прямой LLM (USE_RAG=0)
+### Mode 1: Direct LLM (USE_RAG=0)
 
-Подходит для быстрого старта. Каждое сообщение отправляется в OpenAI API без дополнительного контекста.
+Good for quick start. Each message is sent to OpenAI API without additional context.
 
-**Плюсы:** Простота, не требует подготовки базы знаний  
-**Минусы:** Нет доступа к внутренней документации компании
+**Pros:** Simplicity, no knowledge base preparation required  
+**Cons:** No access to internal company documentation
 
-### Режим 2: RAG (USE_RAG=1)
+### Mode 2: RAG (USE_RAG=1)
 
-Перед генерацией ответа бот ищет релевантные документы в базе знаний и включает их в промпт.
+Before generating a response, the bot searches for relevant documents in the knowledge base and includes them in the prompt.
 
-**Плюсы:** Ответы основаны на актуальной документации, меньше галлюцинаций  
-**Минусы:** Требует подготовки и индексации документов
+**Pros:** Answers are based on up-to-date documentation, fewer hallucinations  
+**Cons:** Requires preparation and indexing of documents
 
-**Пример инициализации RAG в коде:**
+**RAG initialization example in code:**
 
 ```python
 from rag import RAG
 
 rag = RAG(embedding_model="all-MiniLM-L6-v2")
 rag.add_documents([
-    {"id": "faq_1", "text": "Для сброса пароля нажмите 'Забыли пароль'..."},
-    {"id": "faq_2", "text": "Если интернет не работает, проверьте индикатор роутера..."}
+    {"id": "faq_1", "text": "To reset your password, click 'Forgot password'..."},
+    {"id": "faq_2", "text": "If the internet is not working, check the router indicator..."}
 ])
 ```
 
 ---
 
-## Пример диалога
+## Example Conversation
 
 ```
-Пользователь: /start
-Бот: Привет! Я AI-ассистент поддержки.
-     Опишите вашу проблему, и я постараюсь помочь.
+User: /start
+Bot: Hello! I'm an AI support assistant.
+     Describe your issue, and I'll try to help.
 
-Пользователь: У меня не работает интернет
-Бот: Понял вас. Давайте разберёмся. Подскажите: горит ли индикатор роутера?
-      И есть ли доступ к другим сайтам?
+User: My internet is not working
+Bot: Got it. Let's figure it out. Tell me: is the router indicator on?
+      And can you access other websites?
 
-Пользователь: Индикатор горит, но сайты не открываются
-Бот: Попробуйте перезагрузить роутер (выдерните шнур на 30 секунд).
-      Если не поможет — переведу на техника.
+User: The indicator is on, but websites won't open
+Bot: Try rebooting the router (unplug it for 30 seconds).
+      If that doesn't help — I'll escalate you to a technician.
 
-Пользователь: /stats
-Бот: 📊 Статистика:
-      Всего диалогов: 42
-      Средняя оценка: 4.2
+User: /stats
+Bot: 📊 Statistics:
+      Total conversations: 42
+      Average rating: 4.2
 ```
 
 ---
 
-## AI-инструменты в процессе разработки
+## AI Tools in Development
 
-| Этап | Как использовал AI |
-|------|-------------------|
-| Проектирование архитектуры | AI предложил структуру: handlers → LLM/RAG → SQLite → ответ |
-| Системный промпт | AI сгенерировал базовый SYSTEM_PROMPT для ассистента поддержки |
-| RAG-модуль | AI помог реализовать cosine similarity через numpy dot product |
-| Обработка ошибок | AI предложил graceful fallback при отсутствии OPENAI_API_KEY |
-| Структура БД | AI спроектировал схему с полем satisfaction для будущей аналитики |
-
----
-
-## Время разработки
-
-| Этап | Время |
-|------|-------|
-| Скелет бота (handlers, polling) | 30 мин |
-| Интеграция OpenAI API | 20 мин |
-| RAG-модуль (retrieval + generation) | 25 мин |
-| SQLite-хранилище и команда `/stats` | 20 мин |
-| Тестирование и отладка | 25 мин |
-| **Итого** | **~2 часа** |
+| Stage | How AI Was Used |
+|-------|-----------------|
+| Architecture design | AI suggested the structure: handlers → LLM/RAG → SQLite → response |
+| System prompt | AI generated the base SYSTEM_PROMPT for the support assistant |
+| RAG module | AI helped implement cosine similarity via numpy dot product |
+| Error handling | AI suggested graceful fallback when OPENAI_API_KEY is missing |
+| DB schema | AI designed the schema with a satisfaction field for future analytics |
 
 ---
 
-## Возможные улучшения
+## Development Time
 
-- [ ] Inline-кнопки для оценки диалога (1–5 звёзд)
-- [ ] Эскалация на оператора при low-confidence ответах LLM
-- [ ] Интеграция с Confluence/Notion для авто-обновления базы знаний
-- [ ] Webhook-режим вместо polling (для production)
-- [ ] Docker-контейнеризация
-- [ ] Мониторинг: метрики latency, error rate, satisfaction
+| Stage | Time |
+|-------|------|
+| Bot skeleton (handlers, polling) | 30 min |
+| OpenAI API integration | 20 min |
+| RAG module (retrieval + generation) | 25 min |
+| SQLite storage and `/stats` command | 20 min |
+| Testing and debugging | 25 min |
+| **Total** | **~2 hours** |
 
 ---
 
-## Переменные окружения
+## Possible Improvements
 
-| Переменная | Обязательная | Описание |
-|------------|-------------|----------|
-| `BOT_TOKEN` | Да | Токен от @BotFather |
-| `OPENAI_API_KEY` | Да | API-ключ OpenAI |
-| `OPENAI_MODEL` | Нет | Модель LLM (default: `gpt-4o-mini`) |
-| `USE_RAG` | Нет | Включить RAG: `1` или `true` (default: `0`) |
+- [ ] Inline buttons for conversation rating (1–5 stars)
+- [ ] Escalation to a human operator on low-confidence LLM responses
+- [ ] Integration with Confluence/Notion for auto-updating the knowledge base
+- [ ] Webhook mode instead of polling (for production)
+- [ ] Docker containerization
+- [ ] Monitoring: latency, error rate, satisfaction metrics
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BOT_TOKEN` | Yes | Token from @BotFather |
+| `OPENAI_API_KEY` | Yes | OpenAI API key |
+| `OPENAI_MODEL` | No | LLM model (default: `gpt-4o-mini`) |
+| `USE_RAG` | No | Enable RAG: `1` or `true` (default: `0`) |
